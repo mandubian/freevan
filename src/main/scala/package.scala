@@ -13,13 +13,28 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
-import cats.Monad
-
 package object freevan {
 
-  implicit class LiftSyntax[E[_[_]], A](val h: ForAllM[E, A]) extends AnyVal {
-    def liftVan[FX <: FXList](implicit hasFX: HasFX[FX, E]): FreeVan[FX, A] = FreeVan.liftM[FX, E, A](h)
+  import cats.Monad
+
+  implicit class InterpreterSyntax[E[_[_]], A](val h: Interpreter[E, A]) extends AnyVal {
+    def liftVan[L <: HListK](implicit contains: Contains[L, E]): FreeVanFX[L, A] =  FreeVanFX.liftInterpreter(h)
+  }
+
+  type FreeVanFX[L <: HListK, A] = FreeVan[Effects[L, ?[_]], A]
+
+  implicit class FreeVanFXSyntax[L <: HListK, A](val h: FreeVanFX[L, A]) extends AnyVal {
+    def expand[L2 <: HListK](implicit subList: SubList[L, L2]): FreeVanFX[L2, A] = 
+      new FreeVan[Effects[L2, ?[_]], A] {
+        def runFree[M[_] : Monad](effs: Effects[L2, M]): M[A] = h.runFree(subList(effs))
+      }
+  }
+
+  object FreeVanFX {
+    def liftInterpreter[L <: HListK, E[_[_]], A](h: Interpreter[E, A])(implicit contains: Contains[L, E]): FreeVanFX[L, A] =
+      new FreeVan[Effects[L, ?[_]], A] {
+        def runFree[M[_] : Monad](effs: Effects[L, M]): M[A] = h(contains(effs))
+      }
   }
 
 }

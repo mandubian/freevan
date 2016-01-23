@@ -13,63 +13,42 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
 package freevan
 
 import cats.Monad
 
-import shapeless._
 
-// trait FreeVan[Effect[_[_]], A]{
-//   def runFree[M[_] : Monad](e: Effects[M]): M[A]
-// }
-
-// object FreeVan {
-
-//   implicit def monad[Effect[_[_]]] : Monad[FreeVan[Effect, ?]] = new Monad[FreeVan[Effect, ?]] {
-//     def pure[A](x: A): FreeVan[Effect, A] = new FreeVan[Effect, A] {
-//       def runFree[M[_] : Monad](e: Effect[M]): M[A] = Monad[M].pure(x)
-//     }
-
-//     def flatMap[A, B](fa: FreeVan[Effect, A])(f: A => FreeVan[Effect, B]): FreeVan[Effect, B] =
-//       new FreeVan[Effect, B] {
-//         def runFree[M[_] : Monad](e: Effect[M]): M[B] = Monad[M].flatMap(fa.runFree(e))(a => f(a).runFree(e))
-//       }
-//   }
-
-// }
-
-trait FreeVan[FX <: FXList, A] {
+trait FreeVan[Ops[_[_]], A] {
   self =>
-  def runFree[M[_] : Monad](e: Effects[FX, M]): M[A]
 
-  def map[B](f: A => B): FreeVan[FX, B] = new FreeVan[FX, B] {
-    def runFree[M[_] : Monad](e: Effects[FX, M]): M[B] = Monad[M].map(self.runFree(e))(f)
-  }
+  def runFree[M[_] : Monad](e: Ops[M]): M[A]
 
-  def flatMap[B](f: A => FreeVan[FX, B]): FreeVan[FX, B] =
-    new FreeVan[FX, B] {
-      def runFree[M[_] : Monad](e: Effects[FX, M]): M[B] = Monad[M].flatMap(self.runFree(e))(a => f(a).runFree(e))
+  def map[B](f: A => B): FreeVan[Ops, B] =
+    new FreeVan[Ops, B] {
+      def runFree[M[_] : Monad](e: Ops[M]): M[B] = Monad[M].map(self.runFree(e))(f)
     }
+
+  def flatMap[B](f: A => FreeVan[Ops, B]): FreeVan[Ops, B] =
+    new FreeVan[Ops, B] {
+      def runFree[M[_] : Monad](e: Ops[M]): M[B] = Monad[M].flatMap(self.runFree(e))(a => f(a).runFree(e))
+    }
+
 }
 
 
 object FreeVan {
 
-  implicit def monad[FX <: FXList] : Monad[FreeVan[FX, ?]] = new Monad[FreeVan[FX, ?]] {
-    def pure[A](x: A): FreeVan[FX, A] = new FreeVan[FX, A] {
-      def runFree[M[_] : Monad](e: Effects[FX, M]): M[A] = Monad[M].pure(x)
+  implicit def monad[Ops[_[_]]] : Monad[FreeVan[Ops, ?]] = new Monad[FreeVan[Ops, ?]] {
+    def pure[A](x: A): FreeVan[Ops, A] = new FreeVan[Ops, A] {
+      def runFree[M[_] : Monad](e: Ops[M]): M[A] = Monad[M].pure(x)
     }
 
-    def flatMap[A, B](fa: FreeVan[FX, A])(f: A => FreeVan[FX, B]): FreeVan[FX, B] =
-      new FreeVan[FX, B] {
-        def runFree[M[_] : Monad](e: Effects[FX, M]): M[B] = Monad[M].flatMap(fa.runFree(e))(a => f(a).runFree(e))
+    def flatMap[A, B](fa: FreeVan[Ops, A])(f: A => FreeVan[Ops, B]): FreeVan[Ops, B] =
+      new FreeVan[Ops, B] {
+        def runFree[M[_] : Monad](e: Ops[M]): M[B] = Monad[M].flatMap(fa.runFree(e))(a => f(a).runFree(e))
       }
   }
 
-  def liftM[FX <: FXList, E[_[_]], A](h: ForAllM[E, A])(implicit hasFX: HasFX[FX, E]): FreeVan[FX, A] = new FreeVan[FX, A] {
-    def runFree[M[_] : Monad](effs: Effects[FX, M]): M[A] = h(hasFX(effs))
-  }
 }
 
 

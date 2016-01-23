@@ -28,23 +28,23 @@ import cats.std.future._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
-class FreeVanSpec extends FlatSpec with Matchers with ScalaFutures {
+class FreeVanFXSpec extends FlatSpec with Matchers with ScalaFutures {
 
   implicit val defaultPatience =
     PatienceConfig(timeout =  TSpan(300, Seconds), interval = TSpan(5, Millis))
   
 
-  "FreeVan" should "run basic program" in {
+  "FreeVanFX" should "run basic program" in {
     // Random Effect definition
     trait Random[M[_]] {
       def getRandEff: M[Int]
     }
 
-    // lifting helpers to FreeVan
+    // lifting helpers to FreeVanFX
     object Random {
-      def getRand[FX <: FXList](implicit hasFX: HasFX[FX, Random]): FreeVan[FX, Int] = (
-        new ForAllM[Random, Int] { def apply[M[_]](e: Random[M]): M[Int] = e.getRandEff }
-      ).liftVan[FX]
+      val getRand: FreeVanFX[Random |: HNilK, Int] = (
+        new Interpreter[Random, Int] { def apply[M[_]](e: Random[M]): M[Int] = e.getRandEff }
+      ).liftVan
     }
 
     // Stdio Effect definition
@@ -54,26 +54,26 @@ class FreeVanSpec extends FlatSpec with Matchers with ScalaFutures {
       def putLine(a: String): M[Unit]
     }
 
-    // lifting helpers to FreeVan
+    // lifting helpers to FreeVanFX
     object StdIO {
-      def readLine[FX <: FXList](implicit hasFX: HasFX[FX, StdIO]): FreeVan[FX, String] = (
-        new ForAllM[StdIO, String] { def apply[M[_]](e: StdIO[M]): M[String] = e.readLine }
-      ).liftVan[FX]
+      val readLine: FreeVanFX[StdIO |: HNilK, String] = (
+        new Interpreter[StdIO, String] { def apply[M[_]](e: StdIO[M]): M[String] = e.readLine }
+      ).liftVan
 
-      def putLine[FX <: FXList](a: String)(implicit hasFX: HasFX[FX, StdIO]): FreeVan[FX, Unit] = (
-        new ForAllM[StdIO, Unit] { def apply[M[_]](e: StdIO[M]): M[Unit] = e.putLine(a)  }
-      ).liftVan[FX]
+      def putLine[M[_]](a: String): FreeVanFX[StdIO |: HNilK, Unit] = (
+        new Interpreter[StdIO, Unit] { def apply[M[_]](e: StdIO[M]): M[Unit] = e.putLine(a)  }
+      ).liftVan
 
     }
 
     // Define effect stack
-    type FX = Random |: StdIO |: FXNil
+    type FX = Random |: StdIO |: HNilK
 
-    def program: FreeVan[FX, Unit] = for {
-      _ <- StdIO.putLine[FX](s"Enter something:")
-      i <- Random.getRand[FX]
-      a <- StdIO.readLine[FX]
-      _ <- StdIO.putLine[FX](s"read $a & got random $i\n")
+    def program: FreeVanFX[FX, Unit] = for {
+      _ <- StdIO.putLine(s"Enter something:").expand[FX]
+      i <- Random.getRand.expand[FX]
+      a <- StdIO.readLine.expand[FX]
+      _ <- StdIO.putLine(s"read $a & got random $i\n").expand[FX]
     } yield ()
 
     // Define effect handlers
