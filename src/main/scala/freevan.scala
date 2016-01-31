@@ -16,6 +16,7 @@ limitations under the License.
 package freevan
 
 import cats.Monad
+import effects._
 
 
 trait FreeVan[Ops[_[_]], A] {
@@ -28,7 +29,7 @@ trait FreeVan[Ops[_[_]], A] {
       def runFree[M[_] : Monad](e: Ops[M]): M[B] = Monad[M].map(self.runFree(e))(f)
     }
 
-  def flatMap[B](f: A => FreeVan[Ops, B]): FreeVan[Ops, B] =
+  private def flatMap[B](f: A => FreeVan[Ops, B]): FreeVan[Ops, B] =
     new FreeVan[Ops, B] {
       def runFree[M[_] : Monad](e: Ops[M]): M[B] = Monad[M].flatMap(self.runFree(e))(a => f(a).runFree(e))
     }
@@ -38,10 +39,12 @@ trait FreeVan[Ops[_[_]], A] {
 
 object FreeVan {
 
+  def pure[Ops[_[_]], A](x: A): FreeVan[Ops, A] = new FreeVan[Ops, A] {
+    def runFree[M[_] : Monad](e: Ops[M]): M[A] = Monad[M].pure(x)
+  }
+
   implicit def monad[Ops[_[_]]] : Monad[FreeVan[Ops, ?]] = new Monad[FreeVan[Ops, ?]] {
-    def pure[A](x: A): FreeVan[Ops, A] = new FreeVan[Ops, A] {
-      def runFree[M[_] : Monad](e: Ops[M]): M[A] = Monad[M].pure(x)
-    }
+    def pure[A](x: A): FreeVan[Ops, A] = FreeVan.pure[Ops, A](x)
 
     def flatMap[A, B](fa: FreeVan[Ops, A])(f: A => FreeVan[Ops, B]): FreeVan[Ops, B] =
       new FreeVan[Ops, B] {

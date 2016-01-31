@@ -13,6 +13,24 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package object freevan {
+package freevan
+package effects
+
+import cats.Applicative
+
+
+trait Random[M[_]] {
+  def getRand: M[Int]
+}
+
+// lifting helpers to FreeVanFX
+object Random {
+  val getRand: FreeVanFX[Random |: HNilK, Int] = FreeVanFX.liftInterpreter0(
+    new Interpreter[Random, Int] { def apply[M[_]](e: Random[M]): M[Int] = e.getRand }
+  )
+
+  def defaultHandler[M[_] : Applicative]: Random[M] = new Random[M] {
+    def getRand: M[Int] = Applicative[M].pure(scala.util.Random.nextInt())
+  }
 }
 
