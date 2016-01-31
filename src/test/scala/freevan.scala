@@ -35,7 +35,7 @@ class FreeVanFXSpec extends FlatSpec with Matchers with ScalaFutures {
   implicit val defaultPatience =
     PatienceConfig(timeout =  TSpan(300, Seconds), interval = TSpan(5, Millis))
   
-/*
+
   "FreeVanFX" should "run basic program" in {
 
     // Define effect stack
@@ -70,7 +70,7 @@ class FreeVanFXSpec extends FlatSpec with Matchers with ScalaFutures {
     println(s"Result: $res")
 
   }
-*/
+
   "FreeVanFX" should "unify basic program" in {
 
     type FX = Random |: StdIO |: State[?[_], String] |: HNilK
