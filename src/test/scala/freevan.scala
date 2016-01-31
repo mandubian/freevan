@@ -75,7 +75,7 @@ class FreeVanFXSpec extends FlatSpec with Matchers with ScalaFutures {
 
     type FX = Random |: StdIO |: State[?[_], String] |: HNilK
 
-    val program: FreeVanFX[FX, Unit] = for {
+    val program = for {
       i <- Random.getRand
       b <- State.get[String]
       _ <- State.put(b + i)
@@ -100,24 +100,3 @@ class FreeVanFXSpec extends FlatSpec with Matchers with ScalaFutures {
 
 }
 
-
-
-    // implicitly[
-    //   Contains[State[?[_], String] |: HNilK, State[?[_], String]]
-    // ]
-
-    // implicitly[
-    //   SubList[State[?[_], String] |: HNilK, State[?[_], String] |: HNilK]
-    // ]
-
-    // val a = implicitly[
-    //   SubList[State[?[_], String] |: HNilK, FX]
-    // ]
-
-    // implicitly[
-    //   SubList[State[?[_], String] |: HNilK, Random |: State[?[_], String] |: StdIO |: HNilK]
-    // ]
-
-    // implicitly[
-    //   SubList[Random |: HNilK, Random |: State[?[_], String] |: StdIO |: HNilK]
-    // ]

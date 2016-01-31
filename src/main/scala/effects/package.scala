@@ -58,12 +58,9 @@ package object effects {
 
   }
 
-  implicit def isoK[L <: HListK, A, L2 <: HListK](h: FreeVan[Effects[L, ?[_]], A])(
+  implicit def isoK[L <: HListK, A, L2 <: HListK, M[_]](h: Effects[L, M])(
     implicit isoK: IsoK[L, L2]
-  ): FreeVan[Effects[L2, ?[_]], A] =
-    new FreeVan[Effects[L2, ?[_]], A] {
-          def runFree[M[_] : Monad](effs: Effects[L2, M]): M[A] = h.runFree(isoK.from(effs))
-        }
+  ): Effects[L2, M] = isoK.to(h)
 
   object FreeVanFX {
 

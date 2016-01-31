@@ -30,12 +30,12 @@ object Unifier extends LowerUnifier {
     type Ops3[m[_]] = Ops30[m]
   }
 
-  // implicit def unifierSame[L <: HListK]: Unifier.Aux[Effects[L, ?[_]], Effects[L, ?[_]], Effects[L, ?[_]]] = 
-  //   new Unifier[Effects[L, ?[_]], Effects[L, ?[_]]] {
-  //     type Ops3[M[_]] = Effects[L, M]
-  //     def down[M[_]](e: Effects[L, M]): Effects[L, M] = e
-  //     def down2[M[_]](e: Effects[L, M]): Effects[L, M] = e
-  //   }
+  implicit def unifierSame[L <: HListK]: Unifier.Aux[Effects[L, ?[_]], Effects[L, ?[_]], Effects[L, ?[_]]] = 
+    new Unifier[Effects[L, ?[_]], Effects[L, ?[_]]] {
+      type Ops3[M[_]] = Effects[L, M]
+      def down[M[_]](e: Effects[L, M]): Effects[L, M] = e
+      def down2[M[_]](e: Effects[L, M]): Effects[L, M] = e
+    }
 
 }
 
@@ -69,48 +69,16 @@ trait LowerUnifier {
   //   }
 }
 
-
-trait IsoK[L <: HListK, L2 <: HListK] {
-  def from[M[_]](l2: Effects[L2, M]): Effects[L, M]
-  def to[M[_]](l:Effects[L, M]): Effects[L2, M]
+trait IsoOps[Ops[_[_]], Ops2[_[_]]] {
+  def from[M[_]](l2: Ops2[M]): Ops[M]
+  def to[M[_]](l:Ops[M]): Ops2[M]
 }
 
-object IsoK extends LowerIsoK {
-
-  implicit val nil: IsoK[HNilK, HNilK] = new IsoK[HNilK, HNilK] {
-    def from[M[_]](l: Effects[HNilK, M]): Effects[HNilK, M] = l
-    def to[M[_]](l: Effects[HNilK, M]): Effects[HNilK, M] = l
-  }
-
-}
-
-trait LowerIsoK {
-  implicit def head[L <: HListK, H[_[_]], L2 <: HListK, R <: HListK](
-    implicit hCont: Contains.Aux[L2, H, R], next: IsoK[L, R]
-  ): IsoK[H |: L, L2] = new IsoK[H |: L, L2] {
-    def from[M[_]](l2: Effects[L2, M]): Effects[H |: L, M] = {
-      val (e, r) = hCont.extract(l2)
-      e :: next.from(r)
-    }
-
-    def to[M[_]](l: Effects[H |: L, M]): Effects[L2, M] = {
-      val ConsFX(h, t) = l
-      hCont.rebuild(h, next.to(t))
-    }
-  }
-
-  implicit def head2[L <: HListK, H[_[_], _], A, L2 <: HListK, R <: HListK](
-    implicit hCont: Contains.Aux[L2, H[?[_], A], R], next: IsoK[L, R]
-  ): IsoK[H[?[_], A] |: L, L2] = new IsoK[H[?[_], A] |: L, L2] {
-    def from[M[_]](l2: Effects[L2, M]): Effects[H[?[_], A] |: L, M] = {
-      val (e, r) = hCont.extract(l2)
-      e :: next.from(r)
-    }
-
-    def to[M[_]](l: Effects[H[?[_], A] |: L, M]): Effects[L2, M] = {
-      type R[m[_]] = H[m, A]
-      val ConsFX(h, t) = l:Effects[R |: L, M]
-      hCont.rebuild(h, next.to(t))
-    }
+object IsoOps {
+  implicit def isoOps[L <: HListK, L2 <: HListK](
+    implicit iso: IsoK[L, L2]
+  ): IsoOps[Effects[L, ?[_]], Effects[L2, ?[_]]] = new IsoOps[Effects[L, ?[_]], Effects[L2, ?[_]]] {
+    def from[M[_]](l2: Effects[L2, M]): Effects[L, M] = iso.from(l2)
+    def to[M[_]](l:Effects[L, M]): Effects[L2, M] = iso.to(l)
   }
 }
