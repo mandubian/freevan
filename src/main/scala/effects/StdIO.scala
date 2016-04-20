@@ -32,7 +32,7 @@ object StdIO {
     new Interpreter[StdIO, String] { def apply[M[_]](e: StdIO[M]): M[String] = e.readLine }
   )
 
-  def putLine[M[_]](a: String): FreeVanFX[StdIO |: HNilK, Unit] = FreeVanFX.liftInterpreter0(
+  def putLine(a: String): FreeVanFX[StdIO |: HNilK, Unit] = FreeVanFX.liftInterpreter0(
     new Interpreter[StdIO, Unit] { def apply[M[_]](e: StdIO[M]): M[Unit] = e.putLine(a)  }
   )
 

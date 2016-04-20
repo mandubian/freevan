@@ -13,14 +13,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
 package freevan
+
 
 import scala.concurrent.Future
 
-import org.scalatest.concurrent.{AsyncAssertions, PatienceConfiguration, ScalaFutures}
-import org.scalatest.{Assertions, BeforeAndAfterAll, FeatureSpec, FlatSpec, Matchers, Suite}
-import org.scalatest.concurrent.PatienceConfiguration.Timeout
+import org.scalatest.concurrent.{ScalaFutures}
+import org.scalatest.{FlatSpec, Matchers}
 import org.scalatest.time.{Millis, Seconds, Span => TSpan}
 
 import cats.std.future._
@@ -39,12 +38,9 @@ class FreeVanFXSpec extends FlatSpec with Matchers with ScalaFutures {
   "FreeVanFX" should "run basic program" in {
 
     // Define effect stack
-    type FX = Random |: State[?[_], String] |: StdIO |: HNilK
+    type FX = Random |: State[String, ?[_]] |: StdIO |: HNilK
 
-    implicitly[Contains.Aux[FX, State[?[_], String], Random |: StdIO |: HNilK]]
-
-    // Append.headNotContained[HNilK, State[?[_], String], Random |: StdIO |: HNilK, Random |: StdIO |: HNilK]
-    // implicitly[Append.Aux[State[?[_], String]|: HNilK, Random |: StdIO |: HNilK, State[?[_], String] |: Random |: StdIO |: HNilK]]
+    implicitly[Contains.Aux[FX, State[String, ?[_]],  Random |: StdIO |: HNilK]] //, Random |: StdIO |: HNilK]]
 
     def program: FreeVanFX[FX, Unit] = for {
       i <- Random.getRand.expand[FX]
@@ -59,7 +55,7 @@ class FreeVanFXSpec extends FlatSpec with Matchers with ScalaFutures {
 
     val stdIOH = StdIO.defaultHandler[Future]
 
-    def stateH(initial: String): State[Future, String] = new State[Future, String] {
+    def stateH(initial: String): State[String, Future] = new State[String, Future] {
       var i = initial
       def get(): Future[String] = Future.successful(i)
       def put(a: String): Future[Unit] = Future { i = a }
@@ -73,7 +69,7 @@ class FreeVanFXSpec extends FlatSpec with Matchers with ScalaFutures {
 
   "FreeVanFX" should "unify basic program" in {
 
-    type FX = Random |: StdIO |: State[?[_], String] |: HNilK
+    type FX = Random |: StdIO |: State[String, ?[_]] |: HNilK
 
     val program = for {
       i <- Random.getRand
@@ -87,7 +83,7 @@ class FreeVanFXSpec extends FlatSpec with Matchers with ScalaFutures {
 
     val stdIOH = StdIO.defaultHandler[Future]
 
-    def stateH(initial: String): State[Future, String] = new State[Future, String] {
+    def stateH(initial: String): State[String, Future] = new State[String, Future] {
       var i = initial
       def get(): Future[String] = Future.successful(i)
       def put(a: String): Future[Unit] = Future { i = a }

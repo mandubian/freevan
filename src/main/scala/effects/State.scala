@@ -17,21 +17,21 @@ package freevan
 package effects
 
 
-trait State[M[_], S] {
+trait State[S, M[_]] {
   def get(): M[S]
   def put(s: S): M[Unit]
 }
 
 object State {
 
-  def get[S]: FreeVanFX[λ[M[_] => State[M, S]] |: HNilK, S] =
-    FreeVanFX.liftInterpreter0[λ[M[_] => State[M, S]], S](
-      new Interpreter[λ[M[_] => State[M, S]], S] { def apply[M[_]](st: State[M, S]): M[S] = st.get }
+  def get[S]: FreeVanFX[λ[M[_] => State[S, M]] |: HNilK, S] =
+    FreeVanFX.liftInterpreter0[λ[M[_] => State[S, M]], S](
+      new Interpreter[λ[M[_] => State[S, M]], S] { def apply[M[_]](st: State[S, M]): M[S] = st.get }
     )
 
-  def put[S](s: S): FreeVanFX[λ[M[_] => State[M, S]] |: HNilK, Unit] =
-    FreeVanFX.liftInterpreter0[λ[M[_] => State[M, S]], Unit](
-      new Interpreter[λ[M[_] => State[M, S]], Unit] { def apply[M[_]](st: State[M, S]): M[Unit] = st.put(s) }
+  def put[S](s: S): FreeVanFX[λ[M[_] => State[S, M]] |: HNilK, Unit] =
+    FreeVanFX.liftInterpreter0[λ[M[_] => State[S, M]], Unit](
+      new Interpreter[λ[M[_] => State[S, M]], Unit] { def apply[M[_]](st: State[S, M]): M[Unit] = st.put(s) }
     )
 
 }
