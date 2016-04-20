@@ -16,7 +16,9 @@ limitations under the License.
 package freevan
 package effects
 
+import scala.annotation.unifyRightToLeft
 
+@unifyRightToLeft
 trait State[M[_], S] {
   def get(): M[S]
   def put(s: S): M[Unit]

@@ -17,6 +17,7 @@ package freevan
 package effects
 
 
+
 trait IsoK[L <: HListK, L2 <: HListK] {
   def from[M[_]](l2: Effects[L2, M]): Effects[L, M]
   def to[M[_]](l:Effects[L, M]): Effects[L2, M]
@@ -46,18 +47,5 @@ trait LowerIsoK {
     }
   }
 
-  implicit def head2[L <: HListK, H[_[_], _], A, L2 <: HListK, R <: HListK](
-    implicit hCont: Contains.Aux[L2, H[?[_], A], R], next: IsoK[L, R]
-  ): IsoK[H[?[_], A] |: L, L2] = new IsoK[H[?[_], A] |: L, L2] {
-    def from[M[_]](l2: Effects[L2, M]): Effects[H[?[_], A] |: L, M] = {
-      val (e, r) = hCont.extract(l2)
-      e :: next.from(r)
-    }
-
-    def to[M[_]](l: Effects[H[?[_], A] |: L, M]): Effects[L2, M] = {
-      type R[m[_]] = H[m, A]
-      val ConsFX(h, t) = l:Effects[R |: L, M]
-      hCont.rebuild(h, next.to(t))
-    }
-  }
 }
+

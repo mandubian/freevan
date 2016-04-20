@@ -17,8 +17,7 @@ package freevan
 package effects
 
 trait Effects[L <: HListK, M[_]] {
-  // def ::[E[_[_]]](e: E[M]): Effects[E |: L, M] = ConsFX(e, this)
-  def ::[EMA](e: EMA)(implicit unK: UnapplyK[EMA, M]): Effects[unK.TC |: L, M] = ConsFX(unK.subst(e), this)
+  def ::[HK[_[_]]](e: HK[M]): Effects[HK |: L, M] = ConsFX(e, this)
 }
 
 case class ConsFX[HK[_[_]], M[_], TK <: HListK](

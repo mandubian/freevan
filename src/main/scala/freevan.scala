@@ -16,7 +16,7 @@ limitations under the License.
 package freevan
 
 import cats.Monad
-import effects._
+// import effects._
 
 
 trait FreeVan[Ops[_[_]], A] {

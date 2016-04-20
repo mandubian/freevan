@@ -17,12 +17,12 @@ package freevan
 package effects
 
 
-import scala.language.existentials
+// import scala.language.existentials
 import scala.language.experimental.macros
 
-import scala.annotation.{ StaticAnnotation, tailrec }
-import scala.reflect.api.Universe
-import scala.reflect.macros.{ blackbox, whitebox }
+// import scala.annotation.{ StaticAnnotation, tailrec }
+// import scala.reflect.api.Universe
+import scala.reflect.macros.{ whitebox }
 
 
 object Expander {
@@ -51,3 +51,4 @@ class FXMacros(val c: whitebox.Context) {
     }
   }
 }
+

@@ -4,15 +4,17 @@ lazy val commonSettings =  Seq(
     organization := "freevan"
   , name := "freevan"
   , version := "0.1.0-SNAPSHOT"
-  , scalaVersion := "2.11.7"
   , logLevel in update := Level.Warn
+  // , scalaVersion := "2.11.8"
+  , scalaVersion := "2.11.8-tl-201604190743"
+  , scalaBinaryVersion := "2.11"
 )
 
 lazy val strictScalac =
   scalacOptions ++= Seq(
-    "-Yrangepos"
+      "-Yrangepos"
     , "-Xlint"
-    ,"-deprecation"
+    , "-deprecation"
     , "-Xfatal-warnings"
     , "-feature"
     , "-encoding", "UTF-8"
@@ -23,15 +25,21 @@ lazy val strictScalac =
     , "-Ywarn-value-discard"
     , "-Xfuture"
     , "-Ywarn-unused-import"
+    , "-language:higherKinds"
+    , "-Yhigher-order-unification"
 )
 
-resolvers += Resolver.sonatypeRepo("releases")
+resolvers ++= Seq(
+  Resolver.sonatypeRepo("releases")
+, "scalatl" at "http://milessabin.com/scalatl"
+)
+
 
 addCompilerPlugin("org.spire-math" % "kind-projector" % "0.7.1" cross CrossVersion.binary)
 
 lazy val root = project.in(file("."))
   .settings(commonSettings:_*)
-  .settings(name := "scalaeff")
+  .settings(name := "freevan")
   .settings(
     libraryDependencies ++= Seq(
       // "com.chuusai"     %%  "shapeless"        % "2.2.5"
@@ -43,3 +51,4 @@ lazy val root = project.in(file("."))
       // , compilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full)
     )
   )
+  .settings(strictScalac)

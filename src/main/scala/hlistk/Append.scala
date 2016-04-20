@@ -58,19 +58,6 @@ trait LowerAppend extends LowerAppend2 {
     }
   }
 
-  implicit def headContains2[L <: HListK, H[_[_], _], A, L2 <: HListK, R <: HListK, R2 <: HListK](
-    implicit contH: Contains.Aux[L2, H[?[_], A], R], next: Append.Aux[L, R, R2]
-  ): Append.Aux[H[?[_], A] |: L, L2, H[?[_], A] |: R2] = new Append[H[?[_], A] |: L, L2] {
-    type Out = H[?[_], A] |: R2
-
-    def append[M[_]](l: Effects[H[?[_], A] |: L, M], l2: Effects[L2, M]): Effects[H[?[_], A] |: R2, M] = {
-      type R[m[_]] = H[m, A]
-      val ConsFX(h, t) = l:Effects[R |: L, M]
-      val (e, r) = contH.extract(l2)
-      e :: next.append(t, r)
-    }
-  }
-
 }
 
 trait LowerAppend2 {
@@ -86,16 +73,5 @@ trait LowerAppend2 {
     }
   }
 
-  implicit def headNotContained2[L <: HListK, H[_[_], _], A, L2 <: HListK, R <: HListK](
-    implicit next: Append.Aux[L, L2, R]
-  ): Append.Aux[H[?[_], A] |: L, L2, H[?[_], A] |: R] = new Append[H[?[_], A] |: L, L2] {
-    type Out = H[?[_], A] |: R
-
-    def append[M[_]](l: Effects[H[?[_], A] |: L, M], l2: Effects[L2, M]): Effects[H[?[_], A] |: R, M] = {
-      type R[m[_]] = H[m, A]
-      val ConsFX(h, t) = l:Effects[R |: L, M]
-      h :: next.append(t, l2)
-    }
-  }
-
 }
+

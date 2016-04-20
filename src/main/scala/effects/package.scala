@@ -17,8 +17,11 @@ package freevan
 
 import cats.Monad
 
+import scala.language.implicitConversions
+
 
 package object effects {
+  
 
   type FreeVanFX[L <: HListK, A] = FreeVan[Effects[L, ?[_]], A]
 
@@ -42,11 +45,9 @@ package object effects {
 
   implicit class FreeVanFXSyntax[L <: HListK, A](val h: FreeVan[Effects[L, ?[_]], A])  {
     def expand[L2 <: HListK](implicit subList: SubList[L, L2]): FreeVanFX[L2, A] = 
-      // FreeVanFX[L2, A](
         new FreeVan[Effects[L2, ?[_]], A] {
           def runFree[M[_] : Monad](effs: Effects[L2, M]): M[A] = h.runFree(subList(effs))
         }
-      // )
 
 
     def flatMap[B, L2 <: HListK, L3 <: HListK, L4 <: HListK](f: A => FreeVanFX[L2, B])(
@@ -91,6 +92,9 @@ package object effects {
     //     def runFree[M[_] : Monad](effs: Effects[L, M]): M[A] = h(contains(effs))
     //   }
   }
+
+
+
 
   // implicit class InterpreterSyntax[E[_[_]], A](val h: Interpreter[E, A]) extends AnyVal {
   //   def liftVan[L <: HListK](implicit contains: Contains[L, E]): FreeVanFX[L, A] =  FreeVanFX.liftInterpreter(h)
